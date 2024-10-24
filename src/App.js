@@ -1,25 +1,37 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import SignIn from "./pages/signin.page";
+import Register from "./pages/signUp.page";
+import Home from "./pages/home.page";
+import { useRecoilState } from "recoil";
+import { userState } from "./state/atoms/userState";
+import Cookies from "js-cookie";
+import useUsersQuery from "./queries/usersQuery";
+import { useEffect } from "react";
+import { DEFAULT_USER } from "./config";
 
-function App() {
+export default function App() {
+  const [, setUsr] = useRecoilState(userState);
+  const { data } = useUsersQuery();
+
+  useEffect(() => {
+    setUsr(() => {
+      const token = Cookies.get("token")
+        ? JSON.parse(atob(Cookies.get("token")))
+        : undefined;
+
+      return token
+        ? data?.find((usr) => usr.id === token.id && usr.username === token.username)
+        : DEFAULT_USER;
+    });
+  }, [setUsr, data]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<SignIn />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </Router>
   );
-}
-
-export default App;
+};
